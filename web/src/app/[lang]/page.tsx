@@ -77,6 +77,7 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
       tags: task.tags ? task.tags.split('#').map((tag: string) => tag.trim()).filter((tag: string) => !!tag) : task.status === 'failed' ? [task.error] : [t('podcastTagsPlaceholder')],
       status: task.status,
       file_name: task.output_audio_filepath || '',
+      input_txt_content: task.input_txt_content || '',
     }));
   };
 
@@ -226,6 +227,28 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
   const handleTitleClick = (podcast: PodcastItem) => {
     router.push(`${truePath}/podcast/${podcast.file_name.split(".")[0]}`);
   };
+
+  // 处理重试播客生成
+  const handleRetryPodcastGeneration = (input_txt_content: string) => {
+    // 在这里将 input_txt_content 回填到输入框
+    // 通过事件系统通知 PodcastCreator 组件
+    const retryEvent = new CustomEvent('retryWithContent', { detail: { input_txt_content } });
+    window.dispatchEvent(retryEvent);
+  };
+
+  // 监听重试事件
+  useEffect(() => {
+    const handleRetryEvent = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      handleRetryPodcastGeneration(customEvent.detail.input_txt_content);
+    };
+
+    window.addEventListener('retryPodcastGeneration', handleRetryEvent);
+
+    return () => {
+      window.removeEventListener('retryPodcastGeneration', handleRetryEvent);
+    };
+  }, []);
 
   const handlePlayPodcast = (podcast: PodcastItem) => {
     if (currentPodcast?.id === podcast.id) {

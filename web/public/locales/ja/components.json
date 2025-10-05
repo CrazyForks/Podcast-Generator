@@ -53,8 +53,10 @@
   "podcastCard": {
     "podcastGenerationQueued": "ポッドキャスト生成キューに追加されました...",
     "podcastGenerating": "ポッドキャスト生成中...",
+    "podcastGenerationFailed": "ポッドキャスト生成に失敗しました",
     "moreOperations": "その他の操作",
-    "mostPopular": "最も人気"
+    "mostPopular": "最も人気",
+    "retry": "再試行"
   },
   "podcastContent": {
     "speaker": "スピーカー",

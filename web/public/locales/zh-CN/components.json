@@ -53,8 +53,10 @@
   "podcastCard": {
     "podcastGenerationQueued": "播客生成排队中...",
     "podcastGenerating": "播客生成中...",
+    "podcastGenerationFailed": "播客生成失败",
     "moreOperations": "更多操作",
-    "mostPopular": "最受欢迎"
+    "mostPopular": "最受欢迎",
+    "retry": "重试"
   },
   "podcastContent": {
     "speaker": "说话人",

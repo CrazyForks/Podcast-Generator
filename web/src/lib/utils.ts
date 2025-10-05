@@ -195,11 +195,14 @@ import path from 'path';
 /**
  * 从请求头和参数中获取真实的路径
  */
-export async function getTruePathFromHeaders(headersList: ReadonlyHeaders, langParam: string): Promise<string> {
+export async function getTruePathFromHeaders(headersList: ReadonlyHeaders, langParam: string, isRoot: boolean = false): Promise<string> {
   const pathname = headersList.get('x-next-pathname') || '';
   // console.log('Current pathname (from server):', pathname);
   // console.log('langParam:', langParam);
   if (pathname === '' || !languages.includes(pathname)) {
+    if (isRoot) {
+      return '/';
+    }
     return '';
   }
   return pathname !== langParam ? "/" : "/"+langParam;

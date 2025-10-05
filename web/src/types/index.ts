@@ -132,6 +132,7 @@ export interface PodcastItem {
   tags: string[];
   status: 'pending' | 'running' | 'completed' | 'failed'; // 添加status属性
   file_name: string;
+  input_txt_content?: string; // 新增 input_txt_content 字段
 }
 
 // 设置表单数据类型 - 从 SettingsForm.tsx 复制过来并导出

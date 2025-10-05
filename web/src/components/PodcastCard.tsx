@@ -79,7 +79,7 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
               <div className="w-full h-full flex items-center justify-center">
               </div>
             )}
-            
+
             {/* 播放按钮覆盖层 */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
               <button
@@ -120,10 +120,36 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
         </div>
         {/* 遮罩层 */}
         {(podcast.status === 'pending' || podcast.status === 'running') && (
-          <div className="absolute inset-0 bg-black/100 z-10 flex flex-col items-center justify-center text-white text-lg font-semibold p-4 text-center">
+          <div className="absolute inset-0 bg-black/70 z-10 flex flex-col items-center justify-center text-white text-lg font-semibold p-4 text-center backdrop-blur-sm">
             <p className="mb-2">
               {podcast.status === 'pending' ? t('podcastCard.podcastGenerationQueued') : t('podcastCard.podcastGenerating')}
             </p>
+          </div>
+        )}
+        {/* 失败状态的重试按钮 */}
+        {podcast.status === 'failed' && podcast.input_txt_content && (
+          <div className="absolute inset-0 bg-black/70 z-10 flex flex-col items-center justify-center text-white text-center p-4 backdrop-blur-sm font-semibold">
+            <p className="mb-2 text-sm">{t('podcastCard.podcastGenerationFailed')}</p>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const event = new CustomEvent('retryPodcastGeneration', {
+                  detail: {
+                    input_txt_content: podcast.input_txt_content || ''
+                  }
+                });
+                window.dispatchEvent(event);
+              }}
+              className="px-4 py-2 hover:bg-brand-purple rounded-md text-sm transition-colors flex items-center gap-2 text-white hover:border-brand-purple"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                <path d="M21 3v5h-5"/>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                <path d="M8 16H3v5"/>
+              </svg>
+              {t('podcastCard.retry')}
+            </button>
           </div>
         )}
       </div>
@@ -270,6 +296,33 @@ const PodcastCard: React.FC<PodcastCardProps> = ({
           </div>
         )}
       </div>
+
+      {/* 失败状态的重试按钮 - 仅在大卡片模式下显示 */}
+      {podcast.status === 'failed' && podcast.input_txt_content && (
+        <div className="absolute inset-0 bg-black/70 z-10 flex flex-col items-center justify-center text-white text-center p-4 backdrop-blur-sm font-semibold">
+          <p className="mb-2 text-sm">{t('podcastCard.podcastGenerationFailed')}</p>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const event = new CustomEvent('retryPodcastGeneration', {
+                detail: {
+                  input_txt_content: podcast.input_txt_content || ''
+                }
+              });
+              window.dispatchEvent(event);
+            }}
+            className="px-4 py-2 hover:bg-brand-purple rounded-md text-sm transition-colors flex items-center gap-2 text-white hover:border-brand-purple"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+              <path d="M8 16H3v5"/>
+            </svg>
+            {t('podcastCard.retry')}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

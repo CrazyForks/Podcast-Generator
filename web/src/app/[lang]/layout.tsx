@@ -18,7 +18,7 @@ const inter = Inter({
 export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
   const { lang } = await params;
   const { t } = await getTranslation(lang, 'layout');
-  const truePath = await getTruePathFromHeaders(await headers(), lang);
+  const truePath = await getTruePathFromHeaders(await headers(), lang, true);
   return {
     metadataBase: new URL('https://www.podcasthub.com'),
     title: t('title'),

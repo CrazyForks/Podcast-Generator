@@ -45,15 +45,15 @@
       "audio": "https://podcasts.hubtoday.app/podcast/example/edgetts/zh-CN-Xiaoxiao:DragonHDFlashLatestNeural.wav"
     },
     {
-      "name": "Xiaoxiao2Flash",
+      "name": "XiaoxiaoFlash2",
       "alias": "小笑-flash",
-      "code": "zh-CN-Xiaoxiao2:DragonHDFlashLatestNeural",
+      "code": "zh-CN-Xiaoxiao:DragonHDFlashLatestNeural2",
       "locale": "zh-CN",
       "gender": "Female",
       "usedname": "小笑",
       "volume_adjustment": 0,
       "speed_adjustment": 0,
-      "audio": "https://podcasts.hubtoday.app/podcast/example/edgetts/zh-CN-Xiaoxiao2:DragonHDFlashLatestNeural.wav"
+      "audio": "https://podcasts.hubtoday.app/podcast/example/edgetts/zh-CN-Xiaoxiao:DragonHDFlashLatestNeural.wav"
     },
     {
       "name": "YunxiaoFlash",

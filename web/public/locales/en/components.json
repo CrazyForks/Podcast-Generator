@@ -53,8 +53,10 @@
   "podcastCard": {
     "podcastGenerationQueued": "Podcast generation queued...",
     "podcastGenerating": "Podcast generating...",
+    "podcastGenerationFailed": "Podcast generation failed",
     "moreOperations": "More operations",
-    "mostPopular": "Most Popular"
+    "mostPopular": "Most Popular",
+    "retry": "Retry"
   },
   "podcastContent": {
     "speaker": "Speaker",

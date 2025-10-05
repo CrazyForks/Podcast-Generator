@@ -80,6 +80,35 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
      }
    }, []);
 
+   // 监听重试事件以回填输入框内容
+   useEffect(() => {
+     const handleRetryEvent = (e: Event) => {
+       const customEvent = e as CustomEvent;
+       const content = customEvent.detail.input_txt_content;
+
+       // 如果内容包含自定义指令的标记，将其分离
+       if (content.includes('```custom-begin') && content.includes('```custom-end')) {
+         const customBeginIndex = content.indexOf('```custom-begin');
+         const customEndIndex = content.indexOf('```custom-end') + 13; // 13 is the length of '```custom-end'
+
+         const customInstruction = content.substring(customBeginIndex + 15, customEndIndex - 13); // 15 is the length of '```custom-begin'
+         const topicContent = content.substring(customEndIndex + 1).trim(); // +1 to remove the newline after custom-end
+
+         setTopic(topicContent);
+         setCustomInstructions(customInstruction);
+       } else {
+         // 如果没有自定义指令标记，整个内容都是主题
+         setTopic(content);
+       }
+     };
+
+     window.addEventListener('retryWithContent', handleRetryEvent);
+
+     return () => {
+       window.removeEventListener('retryWithContent', handleRetryEvent);
+     };
+   }, []);
+
    const getInitialLanguage = (currentLang: string) => {
      if (currentLang.startsWith('zh')) {
        return 'Chinese';

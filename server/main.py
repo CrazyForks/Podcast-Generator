@@ -256,6 +256,7 @@ async def _generate_podcast_task(
     except Exception as e:
         task_results[auth_id][task_id]["status"] = TaskStatus.FAILED
         task_results[auth_id][task_id]["result"] = str(e)
+        task_results[auth_id][task_id]["input_txt_content"] = input_txt_content # 失败时保存输入文本
         print(f"\nPodcast generation failed for task {task_id}: {e}")
     finally: # 无论成功或失败，都尝试调用回调
         if callback_url:
@@ -374,7 +375,8 @@ async def get_podcast_status(
             "title": task_info.get("title"),
             "tags": task_info.get("tags"),
             "error": task_info["result"] if task_info["status"] == TaskStatus.FAILED else None,
-            "timestamp": task_info["timestamp"]
+            "timestamp": task_info["timestamp"],
+            "input_txt_content": task_info.get("input_txt_content"), # 添加输入文本内容
         })
     return {"message": "Tasks retrieved successfully.", "tasks": all_tasks_for_auth_id}
 
