@@ -26,6 +26,7 @@ services:
       - "3100:8000"
     volumes:
       - /opt/audio/output:/app/server/output
+      - /opt/audio/config:/app/config
     restart: always
     container_name: podcast-server
 
