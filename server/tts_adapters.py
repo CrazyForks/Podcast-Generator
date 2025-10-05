@@ -111,7 +111,7 @@ class IndexTTSAdapter(TTSAdapter):
 
         try:
             print(f"Calling IndexTTS API with voice {voice_code}...")
-            response = requests.get(api_url, stream=True, timeout=30)
+            response = requests.get(api_url, stream=True, timeout=90)
             response.raise_for_status()
 
             temp_audio_file = os.path.join(output_dir, f"temp_audio_{uuid.uuid4()}.wav")
@@ -147,7 +147,7 @@ class EdgeTTSAdapter(TTSAdapter):
 
         try:
             print(f"Calling EdgeTTS API with voice {voice_code}...")
-            response = requests.get(api_url, stream=True, timeout=30)
+            response = requests.get(api_url, stream=True, timeout=90)
             response.raise_for_status()
 
             temp_audio_file = os.path.join(output_dir, f"temp_audio_{uuid.uuid4()}.mp3")
@@ -192,7 +192,7 @@ class FishAudioAdapter(TTSAdapter):
 
         try:
             print(f"Calling FishAudio API with voice {voice_code}...")
-            response = requests.post(self.api_url, data=packed_payload, headers=self.headers, timeout=60) # Increased timeout for FishAudio
+            response = requests.post(self.api_url, data=packed_payload, headers=self.headers, timeout=90) # Increased timeout for FishAudio
 
             temp_audio_file = os.path.join(output_dir, f"temp_audio_{uuid.uuid4()}.mp3")
             with open(temp_audio_file, "wb") as f:
@@ -236,7 +236,7 @@ class MinimaxAdapter(TTSAdapter):
             
         try:
             print(f"Calling Minimax API with voice {voice_code}...")
-            response = requests.post(self.api_url, json=payload, headers=self.headers, timeout=60) # Increased timeout for Minimax
+            response = requests.post(self.api_url, json=payload, headers=self.headers, timeout=90) # Increased timeout for Minimax
 
             temp_audio_file = os.path.join(output_dir, f"temp_audio_{uuid.uuid4()}.mp3")
             response_data = response.json()
@@ -252,7 +252,7 @@ class MinimaxAdapter(TTSAdapter):
                     raise RuntimeError("Minimax API returned success but no audio URL found when output_format is not hex.")
                 
                 # 下载音频文件
-                audio_response = requests.get(audio_url, stream=True, timeout=30)
+                audio_response = requests.get(audio_url, stream=True, timeout=90)
                 audio_response.raise_for_status()
                 with open(temp_audio_file, 'wb') as f:
                     for chunk in audio_response.iter_content(chunk_size=8192):
@@ -289,7 +289,7 @@ class DoubaoTTSAdapter(TTSAdapter):
             self.headers["X-Api-Access-Key"] = self.headers["X-Api-Access-Key"].replace("{{X-Api-Access-Key}}", self.tts_extra_params["X-Api-Access-Key"])
 
             print(f"Calling Doubao TTS API with voice {voice_code}...")
-            response = session.post(self.api_url, headers=self.headers, json=payload, stream=True, timeout=30)
+            response = session.post(self.api_url, headers=self.headers, json=payload, stream=True, timeout=90)
             response.raise_for_status()
 
             audio_data = bytearray()
@@ -356,7 +356,7 @@ class GeminiTTSAdapter(TTSAdapter):
             self.headers['x-goog-api-key'] = gemini_api_key
 
             print(f"Calling Gemini TTS API with voice {voice_code}...")
-            response = requests.post(api_url, headers=self.headers, json=payload, timeout=60)
+            response = requests.post(api_url, headers=self.headers, json=payload, timeout=90)
             response.raise_for_status()
 
             response_data = response.json()
