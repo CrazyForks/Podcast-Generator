@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { startPodcastGenerationTask } from '@/lib/podcastApi';
-import type { PodcastGenerationRequest } from '@/types'; // 导入 SettingsFormData
+import { startPodcastWithStoryGenerationTask } from '@/lib/podcastApi';
+import type { PodcastGenerationRequest } from '@/types';
 import { getSessionData } from '@/lib/server-actions';
-import { getUserPoints } from '@/lib/points'; // 导入 getUserPoints
+import { getUserPoints } from '@/lib/points';
 import { fetchAndCacheProvidersLocal } from '@/lib/config-local'; 
 import { getTranslation } from '@/i18n';
 import { getLanguageFromRequest } from '@/lib/utils';
 
 
-const enableTTSConfigPage = process.env.NEXT_PUBLIC_ENABLE_TTS_CONFIG_PAGE === 'true'; // 定义环境变量
+const enableTTSConfigPage = process.env.NEXT_PUBLIC_ENABLE_TTS_CONFIG_PAGE === 'true';
 
 export async function POST(request: NextRequest) {
   const lang = getLanguageFromRequest(request);
@@ -58,36 +58,16 @@ export async function POST(request: NextRequest) {
     // 1. 查询用户积分
     const currentPoints = await getUserPoints(userId);
 
-    // 2. 根据时长计算需要的积分
-    let pointsToDeduct = parseInt(process.env.POINTS_PER_PODCAST || '10', 10); // 从环境变量获取，默认10
-    if(body.usetime === '8-15 minutes') {
-      pointsToDeduct = pointsToDeduct * 2;
-    }
-    
-    // 3. 检查积分是否足够
-    if (currentPoints === null || currentPoints < pointsToDeduct) {
+    const POINTS_PER_STORY = 30; // 沉浸故事模式固定消耗30积分
+    // 2. 检查积分是否足够
+    if (currentPoints === null || currentPoints < POINTS_PER_STORY) {
       return NextResponse.json(
-        { success: false, error: t('insufficient_points_for_podcast', { pointsNeeded: pointsToDeduct, currentPoints: currentPoints || 0 }) },
-        { status: 402 } // 402 Forbidden - 权限不足，因为积分不足
+        { success: false, error: t('insufficient_points_for_podcast', { pointsNeeded: POINTS_PER_STORY, currentPoints: currentPoints || 0 }) },
+        { status: 402 }
       );
     }
 
-    // 校验语言和时长
-    const allowedLanguages = ['Chinese', 'English', 'Japanese'];
-    if (!body.output_language || !allowedLanguages.includes(body.output_language)) {
-      return NextResponse.json(
-        { success: false, error: t('invalid_output_language') },
-        { status: 400 }
-      );
-    }
-
-    const allowedDurations = ['Under 5 minutes', '8-15 minutes'];
-    if (!body.usetime || !allowedDurations.includes(body.usetime)) {
-      return NextResponse.json(
-        { success: false, error: t('invalid_podcast_duration') },
-        { status: 400 }
-      );
-    }
+    // 沉浸故事模式不需要验证语言和时长参数
 
     // 根据 enableTTSConfigPage 构建最终的 request
     let finalRequest: PodcastGenerationRequest;
@@ -115,8 +95,6 @@ export async function POST(request: NextRequest) {
         input_txt_content: body.input_txt_content,
         tts_provider: body.tts_provider,
         podUsers_json_content: body.podUsers_json_content,
-        usetime: body.usetime,
-        output_language: body.output_language,
         tts_providers_config_content: JSON.stringify(settings),
         api_key: settings.apikey,
         base_url: settings.baseurl,
@@ -124,10 +102,11 @@ export async function POST(request: NextRequest) {
       } as PodcastGenerationRequest;
     }
     
-    const callback_url = process.env.NEXT_PUBLIC_PODCAST_CALLBACK_URL || "" // 从环境变量获取
+    const callback_url = process.env.NEXT_PUBLIC_PODCAST_CALLBACK_URL || ""
     finalRequest.callback_url = callback_url;
-    // 积分足够，继续生成播客
-    const result = await startPodcastGenerationTask(finalRequest, userId, lang);
+    
+    // 调用沉浸故事生成任务
+    const result = await startPodcastWithStoryGenerationTask(finalRequest, userId, lang);
 
     if (result.success) {
       return NextResponse.json({
@@ -137,13 +116,13 @@ export async function POST(request: NextRequest) {
     } else {
       return NextResponse.json(
         { success: false, error: result.error },
-        { status: result.statusCode || 400 } // Use 400 for client-side errors, or 500 for internal server errors
+        { status: result.statusCode || 400 }
       );
     }
 
   } catch (error: any) {
-    console.error('Error in generate-podcast API:', error);
-    const statusCode = error.statusCode || 500; // 假设 HttpError 会有 statusCode 属性
+    console.error('Error in generate-podcast-with-story API:', error);
+    const statusCode = error.statusCode || 500;
     return NextResponse.json(
       { success: false, error: error.message || t('internal_server_error_default') },
       { status: statusCode }

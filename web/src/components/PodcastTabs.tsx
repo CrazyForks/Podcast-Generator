@@ -29,15 +29,17 @@ export default function PodcastTabs({ parsedScript, overviewContent, lang }: Pod
             >
               {t('podcastTabs.script')}
             </button>
-            {/* 大纲 */}
-            <button
-              className={`py-4 px-1 text-base font-semibold ${
-                activeTab === 'overview' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 border-b-2 border-transparent hover:text-gray-900'
-              }`}
-              onClick={() => setActiveTab('overview')}
-            >
-              {t('podcastTabs.outline')}
-            </button>
+            {/* 大纲 - 仅在有内容时显示 */}
+            {overviewContent && (
+              <button
+                className={`py-4 px-1 text-base font-semibold ${
+                  activeTab === 'overview' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 border-b-2 border-transparent hover:text-gray-900'
+                }`}
+                onClick={() => setActiveTab('overview')}
+              >
+                {t('podcastTabs.outline')}
+              </button>
+            )}
           </div>
         </div>
       </div>

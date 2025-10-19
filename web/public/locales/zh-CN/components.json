@@ -103,7 +103,9 @@
     "english": "英文",
     "japanese": "日文",
     "under5Minutes": "5分钟左右",
-    "between8And15Minutes": "8-15分钟"
+    "between8And15Minutes": "8-15分钟",
+    "aiPodcast": "AI播客",
+    "immersiveStory": "沉浸故事"
   },
   "podcastTabs": {
     "script": "脚本",

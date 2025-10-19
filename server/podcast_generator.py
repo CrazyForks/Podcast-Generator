@@ -19,7 +19,7 @@ from tts_adapters import TTSAdapter, IndexTTSAdapter, EdgeTTSAdapter, FishAudioA
 # Global configuration
 output_dir = "output"
 # file_list_path is now generated uniquely for each merge operation
-tts_providers_config_path = '../config/tts_providers.json'
+tts_providers_config_path = '../config/tts_providers-local.json'
 
 # Global cache for TTS provider configurations
 tts_provider_configs_cache = {}
@@ -250,7 +250,7 @@ def get_audio_duration(filepath: str) -> Optional[float]:
         print(f"An unexpected error occurred while getting audio duration for {filepath}: {e}")
         return None
 
-def trim_audio_silence(input_filepath: str, output_filepath: str, silence_threshold_db: float = -60, min_silence_duration: float = 0.5):
+def trim_audio_silence(input_filepath: str, output_filepath: str, silence_threshold_db: float = -60, min_silence_duration: float = 0.5, enable_trim: bool = True):
     """
     Removes leading and trailing silence from an audio file using ffmpeg.
     
@@ -259,7 +259,17 @@ def trim_audio_silence(input_filepath: str, output_filepath: str, silence_thresh
         output_filepath (str): Path where the trimmed audio file will be saved.
         silence_threshold_db (float): Silence threshold in dB. Audio below this level is considered silence.
         min_silence_duration (float): Minimum duration of silence to detect, in seconds.
+        enable_trim (bool): Whether to enable silence trimming. If False, just copy the file.
     """
+    # 如果不启用去除空白，直接复制文件
+    if not enable_trim:
+        try:
+            subprocess.run(["ffmpeg", "-i", input_filepath, "-c", "copy", output_filepath], check=True, capture_output=True)
+            print(f"Silence trimming disabled. Copied {input_filepath} to {output_filepath}")
+            return
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Error copying audio file: {e}")
+    
     try:
         # Check if ffmpeg is available
         subprocess.run(["ffmpeg", "-version"], check=True, capture_output=True)
@@ -307,16 +317,21 @@ def trim_audio_silence(input_filepath: str, output_filepath: str, silence_thresh
 
         start_trim_val = 0.0 # Initialize start_trim_val
         end_trim_val = current_audio_duration # Initialize end_trim_val with the full duration
+        
+        # 保留首尾各30ms的空白
+        padding_ms = 0.2  # 30ms = 0.03秒
 
         if silence_starts and silence_ends:
             # Determine leading silence
             if silence_starts[0] == 0.0: # Silence at the very beginning
-                start_trim_val = silence_ends[0]
+                # 从静音结束处往前保留30ms
+                start_trim_val = max(0.0, silence_ends[0] - padding_ms)
             
             # Determine trailing silence
             # Only consider trimming from the end if there's silence close to the end
             if silence_ends[-1] >= (end_trim_val - min_silence_duration):
-                end_trim_val = silence_starts[-1]
+                # 从静音开始处往后保留30ms
+                end_trim_val = min(current_audio_duration, silence_starts[-1] + padding_ms)
 
         # If after trimming, the duration becomes too short or negative, skip trimming
         if (end_trim_val - start_trim_val) <= 0.01: # Add a small epsilon to avoid issues with very short audios
@@ -421,9 +436,13 @@ def _prepare_openai_settings(args, config_data):
 def _read_prompt_files():
     """Reads content from input, overview, and podcast script prompt files."""
     input_prompt = read_file_content('input.txt')
+
     overview_prompt = read_file_content('prompt/prompt-overview.txt')
     original_podscript_prompt = read_file_content('prompt/prompt-podscript.txt')
-    return input_prompt, overview_prompt, original_podscript_prompt
+    
+    story_overview_prompt = read_file_content('prompt/prompt-story-overview.txt')
+    story_podscript_prompt = read_file_content('prompt/prompt-story-podscript.txt')
+    return input_prompt, overview_prompt, original_podscript_prompt, story_overview_prompt, story_podscript_prompt
 
 def _extract_custom_content(input_prompt_content):
     """Extracts custom content from the input prompt."""
@@ -684,8 +703,17 @@ def generate_audio_for_item(item, config_data, tts_adapter, max_retries: int = 3
         except Exception as e: # Catch other unexpected errors
             raise RuntimeError(f"An unexpected error occurred for speaker {speaker_id} ({voice_code}) on attempt {attempt + 1}: {e}")
 
-def _generate_all_audio_files(podcast_script, config_data, tts_adapter, threads):
-    """Orchestrates the generation of individual audio files."""
+def _generate_all_audio_files(podcast_script, config_data, tts_adapter, threads, enable_trim_silence: bool = True):
+    """
+    Orchestrates the generation of individual audio files.
+    
+    Args:
+        podcast_script: The podcast script containing transcripts.
+        config_data: Configuration data.
+        tts_adapter: TTS adapter for audio generation.
+        threads: Number of threads for parallel processing.
+        enable_trim_silence: Whether to enable silence trimming for audio files. Default is True.
+    """
     os.makedirs(output_dir, exist_ok=True)
     print("\nGenerating audio files...")
     # test script
@@ -712,7 +740,7 @@ def _generate_all_audio_files(podcast_script, config_data, tts_adapter, threads)
                 if original_audio_file:
                     # Define a path for the trimmed audio file
                     trimmed_audio_file = os.path.join(output_dir, f"trimmed_{os.path.basename(original_audio_file)}")
-                    trim_audio_silence(original_audio_file, trimmed_audio_file)
+                    trim_audio_silence(original_audio_file, trimmed_audio_file, enable_trim=enable_trim_silence)
                     # Use the trimmed file for the final merge
                     audio_files_dict[index] = trimmed_audio_file
                     # Clean up the original untrimmed file
@@ -873,7 +901,7 @@ def generate_podcast_audio():
     config_data = _load_configuration()
     api_key, base_url, model = _prepare_openai_settings(args, config_data)
     
-    input_prompt_content, overview_prompt, original_podscript_prompt = _read_prompt_files()
+    input_prompt_content, overview_prompt, original_podscript_prompt, story_overview_prompt, story_podscript_prompt = _read_prompt_files()
     custom_content, input_prompt = _extract_custom_content(input_prompt_content)
     podscript_prompt, pod_users, voices, turn_pattern = _prepare_podcast_prompts(config_data, original_podscript_prompt, custom_content, args.usetime, args.output_language)
 
@@ -886,7 +914,7 @@ def generate_podcast_audio():
 
     tts_adapter = _initialize_tts_adapter(config_data) # 初始化 TTS 适配器，现在返回适配器映射
 
-    audio_files = _generate_all_audio_files(podcast_script, config_data, tts_adapter, args.threads)
+    audio_files = _generate_all_audio_files(podcast_script, config_data, tts_adapter, args.threads, enable_trim_silence=True)
     file_list_path_created = _create_ffmpeg_file_list(audio_files, len(podcast_script.get("podcast_transcripts", [])))
     output_audio_filepath = merge_audio_files(file_list_path_created)
     return {
@@ -919,7 +947,7 @@ def generate_podcast_audio_api(args, config_path: str, input_txt_content: str, t
     config_data["podUsers"] = podUsers
 
     final_api_key, final_base_url, final_model = _prepare_openai_settings(args, config_data)
-    input_prompt, overview_prompt, original_podscript_prompt = _read_prompt_files()
+    input_prompt, overview_prompt, original_podscript_prompt, story_overview_prompt, story_podscript_prompt = _read_prompt_files()
     custom_content, input_prompt = _extract_custom_content(input_txt_content)
     # Assuming `output_language` is passed directly to the function
     podscript_prompt, pod_users, voices, turn_pattern = _prepare_podcast_prompts(config_data, original_podscript_prompt, custom_content, args.usetime, args.output_language)
@@ -933,7 +961,7 @@ def generate_podcast_audio_api(args, config_path: str, input_txt_content: str, t
     
     tts_adapter = _initialize_tts_adapter(config_data, tts_providers_config_content) # 初始化 TTS 适配器，现在返回适配器映射
 
-    audio_files = _generate_all_audio_files(podcast_script, config_data, tts_adapter, args.threads)
+    audio_files = _generate_all_audio_files(podcast_script, config_data, tts_adapter, args.threads, enable_trim_silence=True)
     file_list_path_created = _create_ffmpeg_file_list(audio_files, len(podcast_script.get("podcast_transcripts", [])))
     output_audio_filepath = merge_audio_files(file_list_path_created)
     
@@ -970,3 +998,61 @@ if __name__ == "__main__":
         end_time = time.time()
         execution_time = end_time - start_time
         print(f"\nTotal execution time: {execution_time:.2f} seconds")
+
+
+def generate_podcast_with_story_api(args, config_path: str, input_txt_content: str, tts_providers_config_content: str, podUsers_json_content: str) -> dict:
+    """
+    Generates a podcast audio file based on the provided parameters.
+
+    Args:
+        api_key (str): OpenAI API key.
+        base_url (str): OpenAI API base URL.
+        model (str): OpenAI model to use.
+        threads (int): Number of threads for audio generation.
+        config_path (str): Path to the configuration JSON file.
+        input_txt_content (str): Content of the input prompt.
+        output_language (str): Language for the podcast overview and script (default: Chinese).
+
+    Returns:
+        str: The path to the generated audio file.
+    """
+    print("Starting podcast audio generation...")
+    podUsers = json.loads(podUsers_json_content)
+    config_data = _load_configuration_path(config_path, podUsers)
+    config_data["podUsers"] = podUsers
+
+    final_api_key, final_base_url, final_model = _prepare_openai_settings(args, config_data)
+    input_prompt, overview_prompt, original_podscript_prompt, story_overview_prompt, story_podscript_prompt = _read_prompt_files()
+    custom_content, input_prompt = _extract_custom_content(input_txt_content)
+    # Assuming `output_language` is passed directly to the function
+    podscript_prompt, pod_users, voices, turn_pattern = _prepare_podcast_prompts(config_data, story_podscript_prompt, custom_content, args.usetime, args.output_language)
+
+    print(f"\nInput Prompt (from provided content):\n{input_prompt[:100]}...")
+    print(f"\nOverview Prompt (prompt-overview.txt):\n{story_overview_prompt[:100]}...")
+    print(f"\nPodscript Prompt (prompt-podscript.txt):\n{podscript_prompt[:1000]}...")
+
+    overview_content, title, tags = _generate_overview_content(final_api_key, final_base_url, final_model, story_overview_prompt, input_prompt, args.output_language)
+    podcast_script = _generate_podcast_script(final_api_key, final_base_url, final_model, podscript_prompt, input_prompt)
+    
+    tts_adapter = _initialize_tts_adapter(config_data, tts_providers_config_content) # 初始化 TTS 适配器，现在返回适配器映射
+
+    audio_files = _generate_all_audio_files(podcast_script, config_data, tts_adapter, args.threads, enable_trim_silence=True)
+    file_list_path_created = _create_ffmpeg_file_list(audio_files, len(podcast_script.get("podcast_transcripts", [])))
+    output_audio_filepath = merge_audio_files(file_list_path_created)
+    
+    audio_duration_seconds = get_audio_duration(os.path.join(output_dir, output_audio_filepath))
+    formatted_duration = "00:00"
+    if audio_duration_seconds is not None:
+        minutes = int(audio_duration_seconds // 60)
+        seconds = int(audio_duration_seconds % 60)
+        formatted_duration = f"{minutes:02}:{seconds:02}"
+
+    task_results = {
+        "output_audio_filepath": output_audio_filepath,
+        "podcast_script": podcast_script,
+        "podUsers": podUsers,
+        "audio_duration": formatted_duration,
+        "title": title,
+        "tags": tags,
+    }
+    return task_results

@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) { // GET 函数接收 request
 }
 
 export async function PUT(request: NextRequest) {
-  const { task_id, auth_id, timestamp, status, usetime, lang } = await request.json();
+  const { task_id, auth_id, timestamp, status, usetime, mode, lang } = await request.json();
   const { t } = await getTranslation(lang, 'errors'); // 初始化翻译
   try {
     if(status !== 'completed') {
@@ -62,9 +62,16 @@ export async function PUT(request: NextRequest) {
     const userId = auth_id; // 这里假设 auth_id 就是 userId
 
     // 5. 扣减积分
-    let pointsToDeduct = parseInt(process.env.POINTS_PER_PODCAST || '10', 10); // 从环境变量获取，默认10
-    if(usetime === '8-15 minutes') {
-      pointsToDeduct = pointsToDeduct * 2;
+    let pointsToDeduct: number;
+    if (mode === 'ai-story') {
+      // 沉浸故事模式固定消耗30积分
+      pointsToDeduct = 30;
+    } else {
+      // AI播客模式根据时长计算积分
+      pointsToDeduct = parseInt(process.env.POINTS_PER_PODCAST || '10', 10);
+      if(usetime === '8-15 minutes') {
+        pointsToDeduct = pointsToDeduct * 2;
+      }
     }
 
     const reasonCode = "podcast_generation";

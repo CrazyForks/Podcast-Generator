@@ -11,6 +11,7 @@ export interface PodcastGenerationRequest {
   usetime?: string; // 时长 来自选择
   output_language?: string; // 语言 来自设置
   lang?: string; // 子路径表示语言
+  mode?: 'ai-podcast' | 'ai-story'; // 模式标识：AI播客或沉浸故事
 }
 
 export interface PodcastGenerationResponse {

@@ -9,6 +9,7 @@ import {
   AiOutlineGlobal,
   AiOutlineDown,
   AiOutlineLoading3Quarters,
+  AiOutlineStar
  } from 'react-icons/ai';
  import {
   Wand2,
@@ -66,7 +67,7 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
 
    const [topic, setTopic] = useState('');
    const [customInstructions, setCustomInstructions] = useState('');
-   const [selectedMode, setSelectedMode] = useState<'ai-podcast' | 'flowspeech'>('ai-podcast');
+   const [selectedMode, setSelectedMode] = useState<'ai-podcast' | 'ai-story'>('ai-podcast');
 
    // 初始化时从 localStorage 加载 topic 和 customInstructions
    useEffect(() => {
@@ -144,7 +145,14 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
    const fileInputRef = useRef<HTMLInputElement>(null);
 
    const { toasts, error, success, removeToast } = useToast(); // 使用 useToast hook, 引入 success
-   const { data: session } = useSession(); // 获取 session
+   const { data: session, isPending, error: sessionError } = useSession(); // 获取 session 及其状态
+   
+   // 处理 session 错误
+   useEffect(() => {
+     if (sessionError) {
+       console.error('Session error:', sessionError);
+     }
+   }, [sessionError]);
 
    const handleSubmit = async () => { // 修改为 async 函数
      if (!session?.user) { // 判断是否登录
@@ -171,16 +179,18 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
 
   const handleConfirmGenerate = async () => {
     let inputTxtContent = topic.trim();
-    if (customInstructions.trim()) {
+    
+    // 只在 AI 播客模式下添加自定义指令
+    if (selectedMode === 'ai-podcast' && customInstructions.trim()) {
         inputTxtContent = "```custom-begin"+`\n${customInstructions.trim()}\n`+"```custom-end"+`\n${inputTxtContent}`;
     }
 
-    const request: PodcastGenerationRequest = {
+    // 根据模式构建不同的请求参数
+    const baseRequest = {
         tts_provider: selectedConfigName.replace('.json', ''),
         input_txt_content: inputTxtContent,
         podUsers_json_content: JSON.stringify(selectedPodcastVoices[selectedConfigName] || []),
-        usetime: duration,
-        output_language: language,
+        mode: selectedMode, // 添加模式标识
         ...(enableTTSConfigPage ? {
           tts_providers_config_content: JSON.stringify(settings),
           api_key: settings?.apikey,
@@ -188,6 +198,15 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
           model: settings?.model,
         } : {})
     };
+
+    // 只在 AI 播客模式下添加语言和时长参数
+    const request: PodcastGenerationRequest = selectedMode === 'ai-podcast'
+      ? {
+          ...baseRequest,
+          usetime: duration,
+          output_language: language,
+        }
+      : baseRequest;
 
     try {
         await onGenerate(request); // 等待 API 调用完成
@@ -312,7 +331,7 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
           </h1>
           
           {/* 模式切换按钮 todo */}
-          {/* <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8 flex-wrap">
+          <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8 flex-wrap">
             <button
               onClick={() => setSelectedMode('ai-podcast')}
               className={cn(
@@ -323,21 +342,21 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
               )}
             >
               <AiFillPlayCircle className="w-4 h-4" />
-              AI播客
+              {t('podcastCreator.aiPodcast')}
             </button>
             <button
-              onClick={() => setSelectedMode('flowspeech')}
+              onClick={() => setSelectedMode('ai-story')}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 rounded-full font-medium transition-all duration-200",
-                selectedMode === 'flowspeech'
+                selectedMode === 'ai-story'
                   ? "btn-primary"
                   : "btn-secondary"
               )}
             >
               <AiOutlineStar className="w-4 h-4" />
-              FlowSpeech
+              {t('podcastCreator.immersiveStory')}
             </button>
-          </div> */}
+          </div> 
         </div>
 
         {/* 主要创作区域 */}
@@ -356,7 +375,7 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
             />
             
             {/* 自定义指令 */}
-            {customInstructions !== undefined && (
+            {customInstructions !== undefined && selectedMode === 'ai-podcast' && (
               <div className="mt-4 pt-4 border-t border-neutral-100">
                 <textarea
                   value={customInstructions}
@@ -405,38 +424,42 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
               </button>
 
               {/* 语言选择 */}
-              <div className="relative w-[120px]">
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="appearance-none w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md hover:border-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isGenerating}
-                >
-                  {languageOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <AiOutlineDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
-              </div>
+              {selectedMode === 'ai-podcast' && (
+                <div className="relative w-[120px]">
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="appearance-none w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md hover:border-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isGenerating}
+                  >
+                    {languageOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <AiOutlineDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+                </div>
+              )}
 
               {/* 时长选择 */}
-              <div className="relative w-[120px]">
-                <select
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value as any)}
-                  className="appearance-none w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md hover:border-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isGenerating}
-                >
-                  {durationOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <AiOutlineDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
-              </div>
+              {selectedMode === 'ai-podcast' && (
+                <div className="relative w-[120px]">
+                  <select
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value as any)}
+                    className="appearance-none w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md hover:border-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isGenerating}
+                  >
+                    {durationOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <AiOutlineDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+                </div>
+              )}
 
               {/* 积分显示 */}
               <div className="w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-neutral-200 rounded-lg shadow-sm">
@@ -575,9 +598,11 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
         onConfirm={handleConfirmGenerate}
         title={t('podcastCreator.confirmGeneration')}
         message={t('podcastCreator.confirmGenerationMessage')}
-        points={duration === '8-15 minutes' ?
-          parseInt(process.env.POINTS_PER_PODCAST || '20', 10) * 2 :
-          parseInt(process.env.POINTS_PER_PODCAST || '20', 10)}
+        points={selectedMode === 'ai-story'
+          ? 30
+          : (duration === '8-15 minutes'
+            ? parseInt(process.env.POINTS_PER_PODCAST || '20', 10) * 2
+            : parseInt(process.env.POINTS_PER_PODCAST || '20', 10))}
         lang={lang}
       />
     </div>

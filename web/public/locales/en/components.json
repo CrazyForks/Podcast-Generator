@@ -103,7 +103,9 @@
     "english": "English",
     "japanese": "Japanese",
     "under5Minutes": "5 minutes or less",
-    "between8And15Minutes": "8-15 minutes"
+    "between8And15Minutes": "8-15 minutes",
+    "aiPodcast": "AI Podcast",
+    "immersiveStory": "Immersive Story"
   },
   "podcastTabs": {
     "script": "Script",

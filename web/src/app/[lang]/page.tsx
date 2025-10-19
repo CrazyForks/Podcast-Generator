@@ -169,8 +169,13 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
     try {
       // info('开始生成播客', '正在处理您的请求...');
 
+      // 根据模式选择不同的 API 端点
+      const apiEndpoint = request.mode === 'ai-story'
+        ? '/api/generate-podcast-with-story'
+        : '/api/generate-podcast';
+
       // 直接发送JSON格式的请求体
-      const response = await fetch('/api/generate-podcast', {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

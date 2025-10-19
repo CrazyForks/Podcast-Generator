@@ -39,6 +39,41 @@ export async function startPodcastGenerationTask(body: PodcastGenerationRequest,
 }
 
 /**
+ * 启动沉浸故事模式的播客生成任务（不传递自定义指令、语言和时长参数）
+ */
+export async function startPodcastWithStoryGenerationTask(body: PodcastGenerationRequest, userId: string, lang: string): Promise<ApiResponse<PodcastGenerationResponse>> {
+  body.lang = lang;
+  try {
+    // 创建一个新的请求体，排除 customInstructions、output_language 和 usetime 参数
+    const { output_language, usetime, ...storyBody } = body;
+    
+    const response = await fetch(`${API_BASE_URL}/generate-podcast-with-story`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Auth-Id': userId,
+      },
+      body: new URLSearchParams(Object.entries(storyBody).map(([key, value]) => [key, String(value)])),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: `请求失败，状态码: ${response.status}` }));
+      throw new HttpError(errorData.detail || `请求失败，状态码: ${response.status}`, response.status);
+    }
+
+    const result: PodcastGenerationResponse = await response.json();
+    // 确保id字段存在，因为它在前端被广泛使用
+    result.id = result.task_id;
+    return { success: true, data: result };
+
+  } catch (error: any) {
+    console.error('Error in startPodcastWithStoryGenerationTask:', error);
+    const statusCode = error instanceof HttpError ? error.statusCode : undefined;
+    return { success: false, error: error.message || '启动沉浸故事生成任务失败', statusCode };
+  }
+}
+
+/**
  * 获取播客生成任务状态
  */
 export async function getPodcastStatus(userId: string, lang: string): Promise<ApiResponse<PodcastStatusResponse>> {

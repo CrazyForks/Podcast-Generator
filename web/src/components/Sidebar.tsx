@@ -71,32 +71,43 @@ const Sidebar: React.FC<SidebarProps> = ({
     if (!didFetch.current) {
       didFetch.current = true; // 标记为已执行，避免在开发模式下重复执行
       const fetchSession = async () => {
-        const { session: fetchedSession, user: fetchedUser } = await getSessionData();
-        setSession(fetchedSession);
-        console.log('session', fetchedSession); // 确保只在 session 数据获取并设置后打印
+        try {
+          const { session: fetchedSession, user: fetchedUser } = await getSessionData();
+          setSession(fetchedSession);
+          console.log('session', fetchedSession); // 确保只在 session 数据获取并设置后打印
+        } catch (error) {
+          console.error('Failed to fetch session:', error);
+          // 如果获取 session 失败，不要无限重试
+          setSession(null);
+        }
       };
       fetchSession();
     }
+  }, []); // 只在组件挂载时执行一次
 
-    // 检查 session 是否过期
-    if (session?.expiresAt) {
-      const expirationTime = session.expiresAt.getTime();
-      const currentTime = new Date().getTime();
+  // 单独的 effect 用于检查 session 过期
+  useEffect(() => {
+    if (!session?.expiresAt) return;
 
-      if (currentTime > expirationTime) {
-        console.log(t('sidebar.sessionExpired'));
-        signOut({
-          fetchOptions: {
-            onSuccess: () => {
-              setSession(null); // 会话过期，注销成功后清空本地 session 状态
-              onCreditsChange(0); // 清空积分
-              router.push(truePath+"/"); // 会话过期，执行注销并重定向到主页
-            },
+    const expirationTime = session.expiresAt.getTime();
+    const currentTime = new Date().getTime();
+
+    if (currentTime > expirationTime) {
+      console.log(t('sidebar.sessionExpired'));
+      signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            setSession(null); // 会话过期，注销成功后清空本地 session 状态
+            onCreditsChange(0); // 清空积分
+            router.push(truePath+"/"); // 会话过期，执行注销并重定向到主页
           },
-        });
-      }
+          onError: (error) => {
+            console.error('Sign out error:', error);
+          },
+        },
+      });
     }
-  }, [session, router, onCreditsChange, t]); // 监听 session 变化和 router（因为 signOut 中使用了 router.push），并添加 onCreditsChange
+  }, [session?.expiresAt, router, onCreditsChange, t, truePath]); // 只监听必要的依赖
 
   // todo
   const mainNavItems: NavItem[] = [

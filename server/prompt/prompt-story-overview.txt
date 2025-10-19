@@ -1,0 +1,21 @@
+**1. Metadata Generation**
+
+*   **Step 1: Intermediate Core Summary Generation (Internal Step)**
+    *   **Task**: First, generate a core idea summary of approximately 150 characters based *only* on the **[body content]** of the document (ignoring titles and subtitles).
+    *   **Position**: As the **four line** of the final output.
+
+*   **Step 2: Title Generation**
+    *   **Source**: Must be refined from the "core summary" generated in the previous step.
+    *   **Length**: Strictly controlled to be between 15-20 characters.
+    *   **Format**: Adopt a "Main Title: Subtitle" structure, using a full-width colon ":" for separation. For example: "Brevity and Precision: Practical Engineering for AI Context".
+    *   **Position**: As the **first line** of the final output.
+
+*   **Step 3: Tag Generation**
+    *   **Source**: Extract from the **[body content]** of the document (ignoring titles and subtitles).
+    *   **Quantity**: 3 to 5.
+    *   **Format**: Keywords separated by the "#" symbol (e.g., #Keyword1#Keyword2).
+    *   **Position**: As the **second line** of the final output.
+
+**2. Output Language**
+
+*   ** Make sure the language of the output content is the original input language **.
