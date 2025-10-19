@@ -86,6 +86,7 @@ audio_file_mapping: Dict[str, Dict] = {}
 SECRET_KEY = os.getenv("PODCAST_API_SECRET_KEY", "your-super-secret-key") # 在生产环境中请务必修改!
 # 定义从 tts_provider 名称到其配置文件路径的映射
 tts_provider_map = {
+    "webvoice": "../config/webvoice.json",
     "index-tts": "../config/index-tts.json",
     "doubao-tts": "../config/doubao-tts.json",
     "edge-tts": "../config/edge-tts.json",

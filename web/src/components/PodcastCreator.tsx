@@ -128,11 +128,17 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
    const [showLoginModal, setShowLoginModal] = useState(false); // 控制登录模态框的显示
    const [showConfirmModal, setShowConfirmModal] = useState(false); // 控制确认模态框的显示
    const [voices, setVoices] = useState<Voice[]>([]); // 从 ConfigSelector 获取 voices
-   const [selectedPodcastVoices, setSelectedPodcastVoices] = useState<{[key: string]: Voice[]}>(() => {
-     // 从 localStorage 读取缓存的说话人配置
+   const [selectedPodcastVoices, setSelectedPodcastVoices] = useState<{[key: string]: Voice[]}>({}); // 初始为空对象，避免水合错误
+   const [isVoicesLoaded, setIsVoicesLoaded] = useState(false);
+
+   // 组件挂载后从 localStorage 加载说话人配置
+   useEffect(() => {
      const cachedVoices = getItem<{[key: string]: Voice[]}>('podcast-selected-voices');
-     return cachedVoices || {};
-   }); // 新增：单独存储选中的说话人
+     if (cachedVoices) {
+       setSelectedPodcastVoices(cachedVoices);
+     }
+     setIsVoicesLoaded(true);
+   }, []);
    const [selectedConfig, setSelectedConfig] = useState<TTSConfig | null>(null);
    const [selectedConfigName, setSelectedConfigName] = useState<string>(''); // 新增状态来存储配置文件的名称
    const fileInputRef = useRef<HTMLInputElement>(null);
@@ -367,158 +373,158 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
           </div>
 
           {/* 工具栏 */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-start sm:justify-between px-4 sm:px-6 py-3 border-t border-neutral-100 bg-neutral-50 gap-y-4 sm:gap-x-2">
-            {/* 左侧配置选项 */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 w-full sm:max-w-[500px]">
-            {/* TTS配置选择 */}
-            <div className='relative w-full'>
-            <ConfigSelector
-                onConfigChange={(config, name, newVoices) => { // 接收新的 voices 参数
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between px-4 sm:px-6 py-4 border-t border-neutral-100 bg-gradient-to-br from-neutral-50 to-white gap-4">
+            {/* 隐藏的 TTS 配置选择器 */}
+            <div className="hidden">
+              <ConfigSelector
+                onConfigChange={(config, name, newVoices) => {
                   setSelectedConfig(config);
-                  setSelectedConfigName(name); // 更新配置名称状态
-                  setVoices(newVoices); // 更新 voices 状态
+                  setSelectedConfigName(name);
+                  setVoices(newVoices);
                 }}
                 className="w-full"
-                lang={lang} // 传递 lang
-            /></div>
+                lang={lang}
+              />
+            </div>
 
-            {/* 说话人按钮 */}
-            <div className='relative w-full'>
-            <button
+            {/* 左侧配置选项 */}
+            <div className="flex flex-wrap gap-2 lg:gap-3 justify-center lg:justify-start items-center">
+              {/* 说话人按钮 */}
+              <button
                 onClick={() => setShowVoicesModal(true)}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm",
+                  "w-[120px] px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md",
                   selectedPodcastVoices[selectedConfigName] && selectedPodcastVoices[selectedConfigName].length > 0
-                    ? "w-full bg-black text-white"
-                    : "btn-secondary w-full"
+                    ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
+                    : "bg-white border border-neutral-200 text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50",
+                  (isGenerating || !selectedConfig) && "opacity-50 cursor-not-allowed"
                 )}
                 disabled={isGenerating || !selectedConfig}
-            >
+              >
                 {t('podcastCreator.speaker')}
-            </button></div>
+              </button>
 
-            {/* 语言选择 */}
-            <div className="relative w-full">
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="appearance-none bg-white border border-neutral-200 rounded-lg px-3 py-2 sm:px-3 sm:py-2 pr-6 sm:pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-black w-full text-center"
-                disabled={isGenerating}
-              >
-                {languageOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <AiOutlineDown className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-neutral-400 pointer-events-none" />
-            </div>
+              {/* 语言选择 */}
+              <div className="relative w-[120px]">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="appearance-none w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md hover:border-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isGenerating}
+                >
+                  {languageOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <AiOutlineDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+              </div>
 
-            {/* 时长选择 */}
-            <div className="relative w-full">
-              <select
-                value={duration}
-                onChange={(e) => setDuration(e.target.value as any)}
-                className="appearance-none bg-white border border-neutral-200 rounded-lg px-3 py-2 sm:px-3 sm:py-2 pr-6 sm:pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-black w-full text-center"
-                disabled={isGenerating}
-              >
-                {durationOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <AiOutlineDown className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-neutral-400 pointer-events-none" />
-            </div>
-          </div>
+              {/* 时长选择 */}
+              <div className="relative w-[120px]">
+                <select
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value as any)}
+                  className="appearance-none w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 pr-8 text-sm font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md hover:border-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isGenerating}
+                >
+                  {durationOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <AiOutlineDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+              </div>
 
-          {/* 右侧操作按钮 todo */}
-          <div className="flex items-center gap-6 sm:gap-1 flex-wrap justify-center sm:justify-right w-full sm:w-auto">
-            {/* 文件上传 */}
-            {/* <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-1 sm:p-2 text-neutral-500 hover:text-black transition-colors"
-              title={t('podcastCreator.fileUpload')}
-              disabled={isGenerating}
-            >
-              <AiOutlineUpload className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.md,.doc,.docx"
-              onChange={handleFileUpload}
-              className="hidden"
-            /> */}
-
-            {/* 粘贴链接 */}
-            {/* <button
-              onClick={handlePaste}
-              className="p-1 sm:p-2 text-neutral-500 hover:text-black transition-colors"
-              title={t('podcastCreator.pasteContent')}
-              disabled={isGenerating}
-            >
-              <AiOutlineLink className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button> */}
-
-            {/* 复制 */}
-            {/* <button
-              onClick={() => navigator.clipboard.writeText(topic)}
-              className="p-1 sm:p-2 text-neutral-500 hover:text-black transition-colors"
-              title={t('podcastCreator.copyContent')}
-              disabled={isGenerating || !topic}
-            >
-              <AiOutlineCopy className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button> */}
-            
-            {/* 积分显示 */}
-              <div className="flex items-center justify-center gap-1 text-xs text-neutral-500 w-20 flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-gem flex-shrink-0">
+              {/* 积分显示 */}
+              <div className="w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-neutral-200 rounded-lg shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 flex-shrink-0">
                   <path d="M6 3v18l6-4 6 4V3z"/>
                   <path d="M12 3L20 9L12 15L4 9L12 3Z"/>
                 </svg>
-                <span className="truncate">{credits}</span>
+                <span className="text-sm font-semibold text-neutral-700">{credits}</span>
               </div>
+            </div>
 
+            {/* 右侧操作按钮 */}
+            <div className="flex items-center justify-center lg:justify-end gap-2 lg:gap-3 flex-shrink-0">
+              {/* 文件上传 */}
+              {/* <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-1 sm:p-2 text-neutral-500 hover:text-black transition-colors"
+                title={t('podcastCreator.fileUpload')}
+                disabled={isGenerating}
+              >
+                <AiOutlineUpload className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.md,.doc,.docx"
+                onChange={handleFileUpload}
+                className="hidden"
+              /> */}
+
+              {/* 粘贴链接 */}
+              {/* <button
+                onClick={handlePaste}
+                className="p-1 sm:p-2 text-neutral-500 hover:text-black transition-colors"
+                title={t('podcastCreator.pasteContent')}
+                disabled={isGenerating}
+              >
+                <AiOutlineLink className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button> */}
+
+              {/* 复制 */}
+              {/* <button
+                onClick={() => navigator.clipboard.writeText(topic)}
+                className="p-1 sm:p-2 text-neutral-500 hover:text-black transition-colors"
+                title={t('podcastCreator.copyContent')}
+                disabled={isGenerating || !topic}
+              >
+                <AiOutlineCopy className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button> */}
               {/* 签到按钮 */}
+              
               <button
                 onClick={handleSignIn}
                 disabled={isGenerating}
                 className={cn(
-                  "btn-secondary flex items-center gap-1 text-sm px-3 py-2 sm:px-4 sm:py-2",
+                  "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md",
+                  "bg-white border border-neutral-200 text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50",
                   isGenerating && "opacity-50 cursor-not-allowed"
                 )}
               >
-              {t('podcastCreator.checkIn')}
+                {t('podcastCreator.checkIn')}
               </button>
 
-            <div className="flex flex-col items-center gap-1">
               {/* 创作按钮 */}
               <button
                 onClick={handleSubmit}
                 disabled={!topic.trim() || isGenerating}
                 className={cn(
-                  "btn-primary flex items-center gap-1 text-sm px-3 py-2 sm:px-4 sm:py-2",
+                  "flex items-center gap-1.5 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg",
+                  "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700",
                   (!topic.trim() || isGenerating) && "opacity-50 cursor-not-allowed"
                 )}
               >
                 {isGenerating ? (
                   <>
-                    <AiOutlineLoading3Quarters className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                    <span className=" xs:inline">{t('podcastCreator.biu')}</span>
+                    <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin" />
+                    <span>{t('podcastCreator.biu')}</span>
                   </>
                 ) : (
                   <>
-                    <Wand2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className=" xs:inline">{t('podcastCreator.create')}</span>
+                    <Wand2 className="w-4 h-4" />
+                    <span>{t('podcastCreator.create')}</span>
                   </>
                 )}
               </button>
-              
             </div>
           </div>
         </div>
-      </div>
 
       {/* Voices Modal */}
       {selectedConfig && (

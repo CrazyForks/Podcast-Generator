@@ -26,7 +26,7 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
 }) => {
   const { t } = useTranslation(lang, 'components'); // 初始化 useTranslation 并指定命名空间
   const [configFiles, setConfigFiles] = useState<ConfigFile[]>([]);
-  const [selectedConfig, setSelectedConfig] = useState<string>('');
+  const [selectedConfig, setSelectedConfig] = useState<string>();
   const [currentConfig, setCurrentConfig] = useState<TTSConfig | null>(null);
   const [voices, setVoices] = useState<Voice[]>([]); // 新增 voices 状态
   const [isOpen, setIsOpen] = useState(false);
@@ -52,6 +52,9 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
         return !!(settings.minimax?.group_id && settings.minimax?.api_key);
       case 'gemini':
         return !!(settings.gemini?.api_key);
+      case 'webvoice':
+        // webvoice 使用浏览器内置的 Web Speech API，无需额外配置
+        return true;
       default:
         return false;
     }
@@ -95,36 +98,43 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
     loadConfigFilesCalled.current = true;
 
     try {
-      const response = await fetch('/api/config', {
-        method: 'GET',
-        headers: {
-          'x-next-locale': lang,
-        },
-      });
-      const result = await response.json();
+      // const response = await fetch('/api/config', {
+      //   method: 'GET',
+      //   headers: {
+      //     'x-next-locale': lang,
+      //   },
+      // });
+      // const result = await response.json();
       
-      if (result.success && Array.isArray(result.data)) {
+      // if (result.success && Array.isArray(result.data)) {
         // 过滤出已配置的TTS选项
-        const settings = await getTTSProviders(lang);
-        const availableConfigs = result.data.filter((config: ConfigFile) =>
-          isTTSConfigured(config.name, settings)
-        );
-        
+        // const settings = await getTTSProviders(lang);
+        // const availableConfigs = result.data.filter((config: ConfigFile) =>
+        //   isTTSConfigured(config.name, settings)
+        // );
+
+        const availableConfigs = [
+          {
+            name: 'webvoice.json',
+            displayName: 'webvoice',
+            path: 'webvoice.json',
+          },
+        ];
         setConfigFiles(availableConfigs);
         // 默认选择第一个可用配置
         if (availableConfigs.length > 0 && !selectedConfig) {
-          setSelectedConfig(availableConfigs[0].name);
-          loadConfig(availableConfigs[0].name);
+            setSelectedConfig(availableConfigs[0].name);
+            loadConfig(availableConfigs[0].name);
         } else if (availableConfigs.length === 0) {
           // 如果没有可用配置，清空当前选择
           setSelectedConfig('');
           setCurrentConfig(null);
           onConfigChange?.(null as any, '', []); // 传递空数组作为 voices
         }
-      } else {
-        console.error('Invalid config files data:', result);
-        setConfigFiles([]);
-      }
+      // } else {
+      //   console.error('Invalid config files data:', result);
+      //   setConfigFiles([]);
+      // }
     } catch (error) {
       console.error('Failed to process config files:', error);
       setConfigFiles([]);
@@ -163,56 +173,61 @@ const ConfigSelector: React.FC<ConfigSelectorProps> = ({
 
   return (
       <div className={className}>
-        {/* 配置选择器 */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="px-4 py-2 rounded-lg text-sm btn-secondary w-full"
-            disabled={isLoading}
-          >
-            {/* <Settings className="w-4 h-4 text-neutral-500" /> */}
-            <span className="flex-1 text-left text-sm">
-              {isLoading ? t('configSelector.loading') : selectedConfigFile?.displayName || (configFiles.length === 0 ? t('configSelector.pleaseConfigTTS') : t('configSelector.selectTTSConfig'))}
-            </span>
-            {/* <ChevronDown className={cn(
-              "w-4 h-4 text-neutral-400 transition-transform",
-              isOpen && "rotate-180"
-            )} /> */}
-          </button>
+        {/* 隐藏TTS选择按钮 */}
+        {false && (
+          <>
+            {/* 配置选择器 */}
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="px-4 py-2 rounded-lg text-sm btn-secondary w-full"
+                disabled={isLoading}
+              >
+                {/* <Settings className="w-4 h-4 text-neutral-500" /> */}
+                <span className="flex-1 text-left text-sm">
+                  {isLoading ? t('configSelector.loading') : selectedConfigFile?.displayName || (configFiles.length === 0 ? t('configSelector.pleaseConfigTTS') : t('configSelector.selectTTSConfig'))}
+                </span>
+                {/* <ChevronDown className={cn(
+                  "w-4 h-4 text-neutral-400 transition-transform",
+                  isOpen && "rotate-180"
+                )} /> */}
+              </button>
 
-          {/* 下拉菜单 */}
-          {isOpen && (
-            <div className="absolute top-full left-0 right-0 mb-1 bg-white border border-neutral-200 rounded-lg shadow-large z-50 max-h-60 overflow-y-auto">
-              {Array.isArray(configFiles) && configFiles.length > 0 ? configFiles.map((config) => (
-                <button
-                  key={config.name}
-                  onClick={() => handleConfigSelect(config.name)}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-neutral-50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="font-medium text-sm text-black">
-                      {config.displayName}
+              {/* 下拉菜单 */}
+              {isOpen && (
+                <div className="absolute top-full left-0 right-0 mb-1 bg-white border border-neutral-200 rounded-lg shadow-large z-50 max-h-60 overflow-y-auto">
+                  {Array.isArray(configFiles) && configFiles.length > 0 ? configFiles.map((config) => (
+                    <button
+                      key={config.name}
+                      onClick={() => handleConfigSelect(config.name)}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-neutral-50 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium text-sm text-black">
+                          {config.displayName}
+                        </div>
+                      </div>
+                      {selectedConfig === config.name && (
+                        <AiOutlineCheck className="w-4 h-4 text-green-500" />
+                      )}
+                    </button>
+                  )) : (
+                    <div className="px-4 py-3 text-sm text-neutral-500 text-center">
+                      <div className="mb-1">{t('configSelector.noAvailableTTSConfig')}</div>
+                      <div className="text-xs">{t('configSelector.pleaseConfigTTS')}</div>
                     </div>
-                  </div>
-                  {selectedConfig === config.name && (
-                    <AiOutlineCheck className="w-4 h-4 text-green-500" />
                   )}
-                </button>
-              )) : (
-                <div className="px-4 py-3 text-sm text-neutral-500 text-center">
-                  <div className="mb-1">{t('configSelector.noAvailableTTSConfig')}</div>
-                  <div className="text-xs">{t('configSelector.pleaseConfigTTS')}</div>
-                </div>
-              )}
             </div>
-          )}
+              )}
 
-      
-        {/* 点击外部关闭下拉菜单 */}
-        {isOpen && (
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
+           
+            {/* 点击外部关闭下拉菜单 */}
+            {isOpen && (
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsOpen(false)}
+              />
+            )}
+          </>
         )}
       </div>
   );

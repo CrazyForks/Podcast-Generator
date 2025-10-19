@@ -198,11 +198,16 @@ const VoicesModal: React.FC<VoicesModalProps> = ({ isOpen, onClose, voices, onSe
                               audio.pause();
                               setPlayingVoiceId(null);
                             } else {
+                              // 先暂停其他正在播放的音频
                               if (playingVoiceId && audioRefs.current.has(playingVoiceId)) {
                                 audioRefs.current.get(playingVoiceId)?.pause();
                               }
-                              audio.play();
-                              setPlayingVoiceId(voice.code!);
+                              // 尝试播放音频,处理可能的失败
+                              audio.play().catch((error) => {
+                                console.error('音频播放失败:', error);
+                                setPlayingVoiceId(null);
+                              });
+                              // 注意:状态会在 onPlay 事件中设置,而不是在这里
                             }
                           }
                         }}
@@ -216,8 +221,18 @@ const VoicesModal: React.FC<VoicesModalProps> = ({ isOpen, onClose, voices, onSe
                           else audioRefs.current.delete(voice.code!);
                         }}
                         src={voice.audio}
+                        onPlay={() => setPlayingVoiceId(voice.code!)}
                         onEnded={() => setPlayingVoiceId(null)}
-                        onPause={() => setPlayingVoiceId(null)}
+                        onPause={(e) => {
+                          // 只在音频真正暂停时清除状态(不是因为切换到其他音频)
+                          if (playingVoiceId === voice.code) {
+                            setPlayingVoiceId(null);
+                          }
+                        }}
+                        onError={() => {
+                          console.error('音频加载失败:', voice.audio);
+                          setPlayingVoiceId(null);
+                        }}
                         preload="none"
                         className="hidden"
                       />

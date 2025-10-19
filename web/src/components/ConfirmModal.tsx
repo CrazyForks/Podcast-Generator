@@ -96,7 +96,7 @@ const ConfirmModal: FC<ConfirmModalProps> = ({
           
           <button
             onClick={handleConfirm}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm font-medium text-white bg-gradient-to-r from-brand-purple to-brand-pink hover:from-brand-purple-hover hover:to-brand-pink focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-purple transition-all"
+            className="px-4 py-2 border-transparent rounded-md shadow-sm font-medium text-white bg-gradient-to-r from-brand-purple to-brand-pink hover:from-brand-purple-hover hover:to-brand-pink focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-purple transition-all"
           >
             {confirmText || t('podcastCreator.confirm')}
           </button>

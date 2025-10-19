@@ -33,6 +33,7 @@ const TTS_PROVIDER_ORDER = [
   'fish-audio',
   'gemini-tts',
   'index-tts',
+  'webvoice',
 ];
 
 // 获取配置文件列表

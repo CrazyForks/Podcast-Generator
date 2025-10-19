@@ -17,16 +17,23 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   lang
 }) => {
   const { t } = useTranslation(lang, 'components');
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false); // 初始为 false 避免水合错误
   const [isClosing, setIsClosing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // 从本地存储获取通知状态，避免重复显示
+  // 组件挂载后再检查 localStorage
   useEffect(() => {
+    setIsMounted(true);
     const hasClosed = localStorage.getItem('notificationBannerClosed');
-    if (hasClosed) {
-      setIsVisible(false);
+    if (!hasClosed) {
+      setIsVisible(true);
     }
   }, []);
+
+  // 在挂载前不渲染任何内容，避免水合不匹配
+  if (!isMounted) {
+    return null;
+  }
 
   const handleClose = () => {
     setIsClosing(true);

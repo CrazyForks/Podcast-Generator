@@ -56,7 +56,8 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
   const { lang } = use(params);
   const { t } = useTranslation(lang, 'home');
   const { toasts, success, error, warning, info, removeToast } = useToast();
-  const { executeOnce } = usePreventDuplicateCall();
+  const { executeOnce: executeOncePodcasts } = usePreventDuplicateCall();
+  const { executeOnce: executeOnceCredits } = usePreventDuplicateCall();
   const router = useRouter(); // Initialize useRouter
 
   // 辅助函数：将 API 响应映射为 PodcastItem 数组
@@ -72,7 +73,7 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
       },
       audio_duration: task.audio_duration || '00:00',
       playCount: 0,
-      createdAt: task.timestamp ? new Date(task.timestamp * 1000).toISOString() : new Date().toISOString(),
+      createdAt: task.timestamp ? new Date(task.timestamp * 1000).toISOString() : '', // 使用空字符串而不是当前时间，避免水合错误
       audioUrl: task.audioUrl ? task.audioUrl : '',
       tags: task.tags ? task.tags.split('#').map((tag: string) => tag.trim()).filter((tag: string) => !!tag) : task.status === 'failed' ? [task.error] : [t('podcastTagsPlaceholder')],
       status: task.status,
@@ -105,18 +106,11 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
   // 播客详情页状态
 
   // 从后端获取积分数据和初始化数据加载
-  const initialized = React.useRef(false); // 使用 useRef 追踪是否已初始化
-
   useEffect(() => {
-    // 确保只在组件首次挂载时执行一次
-    if (!initialized.current) {
-      initialized.current = true;
-
-      // 首次加载时获取播客列表和积分/用户信息
-      fetchRecentPodcasts();
-      // fetchCreditsAndUserInfo(); // 在fetchRecentPodcasts中调用
-
-    }
+    console.log('HomePage mounted: 初始化数据加载');
+    // 首次加载时获取播客列表和积分/用户信息
+    fetchRecentPodcasts();
+    // fetchCreditsAndUserInfo(); // 在fetchRecentPodcasts中调用
     
     // 设置定时器每20秒刷新一次
     // const interval = setInterval(() => {
@@ -124,7 +118,10 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
     // }, 20000);
 
     // // 清理定时器
-    // return () => clearInterval(interval);
+    // return () => {
+    //   clearInterval(interval);
+    //   console.log('HomePage unmounted: 清理定时器');
+    // };
   }, []); // 空依赖数组，只在组件挂载时执行一次
 
   // 加载设置
@@ -267,7 +264,7 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
 
   // 获取最近播客列表 - 使用防重复调用机制
   const fetchRecentPodcasts = async () => {
-    const result = await executeOnce(async () => {
+    const result = await executeOncePodcasts(async () => {
       const response = await trackedFetch('/api/podcast-status', {
         method: 'GET',
         headers: {
@@ -282,6 +279,7 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
     });
 
     if (!result) {
+      console.log('fetchRecentPodcasts: 重复调用已跳过');
       return; // 如果是重复调用，直接返回
     }
 
@@ -298,61 +296,83 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
       error(t('error.dataProcessing'), err instanceof Error ? err.message : t('error.cantProcessPodcastList'));
     }
 
-    fetchCreditsAndUserInfo();
+    // 调用积分和用户信息获取（也有防重复机制）
+    await fetchCreditsAndUserInfo();
   };
 
-  // 新增辅助函数：获取积分和用户信息
+  // 新增辅助函数：获取积分和用户信息 - 使用防重复调用机制
   const fetchCreditsAndUserInfo = async () => {
+    const result = await executeOnceCredits(async () => {
+      const results = {
+        credits: 0,
+        transactions: [] as any[],
+        user: null as any,
+      };
+
+      // 获取积分
       try {
-          const pointsResponse = await fetch('/api/points', {
-            method: 'GET',
-            headers: {
-              'x-next-locale': lang,
-            },
-          });
-          if (pointsResponse.ok) {
-              const data = await pointsResponse.json();
-              if (data.success) {
-                  setCredits(data.points);
-              } else {
-                  console.error('Failed to fetch credits:', data.error);
-                  setCredits(0); // 获取失败则设置为0
-              }
+        const pointsResponse = await trackedFetch('/api/points', {
+          method: 'GET',
+          headers: {
+            'x-next-locale': lang,
+          },
+        });
+        if (pointsResponse.ok) {
+          const data = await pointsResponse.json();
+          if (data.success) {
+            results.credits = data.points;
           } else {
-              console.error('Failed to fetch credits with status:', pointsResponse.status);
-              setCredits(0); // 获取失败则设置为0
+            console.error('Failed to fetch credits:', data.error);
           }
+        } else {
+          console.error('Failed to fetch credits with status:', pointsResponse.status);
+        }
       } catch (error) {
-          console.error('Error fetching credits:', error);
-          setCredits(0); // 发生错误则设置为0
+        console.error('Error fetching credits:', error);
       }
 
+      // 获取积分历史
       try {
-          const transactionsResponse = await fetch('/api/points/transactions', {
-            method: 'GET',
-            headers: {
-              'x-next-locale': lang,
-            },
-          });
-          if (transactionsResponse.ok) {
-              const data = await transactionsResponse.json();
-              if (data.success) {
-                  setPointHistory(data.transactions);
-              } else {
-                  console.error('Failed to fetch point transactions:', data.error);
-                  setPointHistory([]);
-              }
+        const transactionsResponse = await trackedFetch('/api/points/transactions', {
+          method: 'GET',
+          headers: {
+            'x-next-locale': lang,
+          },
+        });
+        if (transactionsResponse.ok) {
+          const data = await transactionsResponse.json();
+          if (data.success) {
+            results.transactions = data.transactions;
           } else {
-              console.error('Failed to fetch point transactions with status:', transactionsResponse.status);
-              setPointHistory([]);
+            console.error('Failed to fetch point transactions:', data.error);
           }
+        } else {
+          console.error('Failed to fetch point transactions with status:', transactionsResponse.status);
+        }
       } catch (error) {
-          console.error('Error fetching point transactions:', error);
-          setPointHistory([]);
+        console.error('Error fetching point transactions:', error);
       }
 
-      const { session, user } = await getSessionData();
-      setUser(user); // 设置用户信息
+      // 获取用户信息
+      try {
+        const { session, user } = await getSessionData();
+        results.user = user;
+      } catch (error) {
+        console.error('Error fetching session data:', error);
+      }
+
+      return results;
+    });
+
+    if (!result) {
+      console.log('fetchCreditsAndUserInfo: 重复调用已跳过');
+      return; // 如果是重复调用，直接返回
+    }
+
+    // 更新状态
+    setCredits(result.credits);
+    setPointHistory(result.transactions);
+    setUser(result.user);
   };
 
   const renderMainContent = () => {
