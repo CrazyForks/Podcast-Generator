@@ -20,10 +20,10 @@ export async function generateMetadata({ params }: { params: { lang: string } })
   const { t } = await getTranslation(lang, 'layout');
   const truePath = await getTruePathFromHeaders(await headers(), lang, true);
   return {
-    metadataBase: new URL('https://www.podcasthub.com'),
+    metadataBase: new URL('https://podcast.hubtoday.app'),
     title: t('title'),
     description: t('description'),
-    keywords: t('keywords').split(','),
+    // keywords: t('keywords').split(','),
     authors: [{ name: 'PodcastHub Team' }],
     icons: {
       icon: '/favicon.webp',

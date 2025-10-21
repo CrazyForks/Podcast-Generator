@@ -7,6 +7,8 @@ import PodcastCreator from '@/components/PodcastCreator';
 import ContentSection from '@/components/ContentSection';
 import AudioPlayer from '@/components/AudioPlayer';
 import SettingsForm from '@/components/SettingsForm';
+import HowToUse from '@/components/HowToUse';
+import FAQ from '@/components/FAQ';
 import PointsOverview from '@/components/PointsOverview'; // 导入 PointsOverview
 import LoginModal from '@/components/LoginModal'; // 导入 LoginModal
 import NotificationBanner from '@/components/NotificationBanner'; // 导入 NotificationBanner
@@ -414,6 +416,12 @@ export default function HomePage({ params }: { params: Promise<{ lang: string }>
                 lang={lang}
               />
             )}
+            
+            {/* 使用说明 */}
+            <HowToUse lang={lang} />
+            
+            {/* 常见问题 */}
+            <FAQ lang={lang} />
             
             {/* 定价部分 todo */}
             {/* <PricingSection /> */}

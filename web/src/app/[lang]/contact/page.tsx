@@ -58,7 +58,7 @@ const ContactUsPage: React.FC<{ params: paramsType}> = async ({ params }) => {
                 <p className="text-gray-600">
                   {t('email_description')}
                   <a
-                    href="mailto:support@podcasthub.com"
+                    href="mailto:justlikemaki@foxmail.com"
                     className="block text-blue-600 hover:text-blue-700 transition-colors break-all mt-1 font-medium"
                   >
                     justlikemaki@foxmail.com

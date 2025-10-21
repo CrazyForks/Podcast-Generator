@@ -18,6 +18,50 @@
   "taskCreatedTitle": "Task Created",
   "taskCreatedMessage": "Podcast generation task has been started, Task ID",
   "recentlyGenerated": "Recently Generated",
+  "howToUse": "How to Use",
+  "howToUseSubtitle": "Get started with PodcastHub and create professional podcasts easily",
+  "faq": "FAQ",
+  "faqSubtitle": "Answers to common questions about using our service",
+  "howToUseSteps": {
+    "step1": {
+      "title": "1. Input Content",
+      "description": "Enter the text you want to convert into a podcast in the text box. It can be articles, notes, or any text. Use story generator feature to quickly generate automatic podcast content."
+    },
+    "step2": {
+      "title": "2. Select Mode",
+      "description": "Choose between standard mode or AI story mode. Our podcast generator helps you create more engaging podcast scripts."
+    },
+    "step3": {
+      "title": "3. Configure Voice",
+      "description": "Select the appropriate voice role to customize your podcast audio."
+    },
+    "step4": {
+      "title": "4. Generate Podcast",
+      "description": "Click the generate button, and PodcastHub will automatically create professional podcast audio for you."
+    }
+  },
+  "faqItems": {
+    "q1": {
+      "question": "What is PodcastHub?",
+      "answer": "PodcastHub is an intelligent podcast generation platform that quickly converts your text content into professional podcast audio. It supports multiple voices and AI generation modes."
+    },
+    "q2": {
+      "question": "How to use the story generator feature?",
+      "answer": "When selecting AI story mode, the system automatically uses the immersive story feature to create vivid AI voice-over scripts."
+    },
+    "q3": {
+      "question": "What languages are supported?",
+      "answer": "PodcastHub supports multiple languages including Chinese, English, Japanese, and more. You can choose the corresponding voice role based on your content."
+    },
+    "q4": {
+      "question": "How long are generated podcasts saved?",
+      "answer": "To protect your privacy and save storage space, generated podcast audio is retained for 30 minutes. Please download and save it locally in time."
+    },
+    "q5": {
+      "question": "How to get more credits?",
+      "answer": "You can purchase credit packages or sign up for free trial credits to get more generation attempts. New users receive free trial credits upon registration."
+    }
+  },
   "dataRetentionWarning": "Data is only kept for 30 minutes, please download and save it as soon as possible",
   "saveSuccessTitle": "Save successfully",
   "saveErrorTitle": "Save failed",

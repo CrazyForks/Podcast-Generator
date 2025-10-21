@@ -18,6 +18,54 @@
   "taskCreatedTitle": "任务已创建",
   "taskCreatedMessage": "播客生成任务已启动，任务ID",
   "recentlyGenerated": "最近生成",
+  "howToUse": "使用说明",
+  "howToUseSubtitle": "快速上手 PodcastHub,轻松生成专业播客",
+  "faq": "常见问题",
+  "faqSubtitle": "解答您在使用过程中可能遇到的问题",
+  "howToUseSteps": {
+    "step1": {
+      "title": "1. 输入内容",
+      "description": "在文本框中输入您想要转换为播客的内容,可以是文章、笔记或任何文本。支持使用沉浸故事功能快速生成自动配音内容。"
+    },
+    "step2": {
+      "title": "2. 选择模式",
+      "description": "选择AI播客模式或沉浸故事模式。使用我们的AI播客生成器可以帮助您创建更有吸引力的播客脚本。"
+    },
+    "step3": {
+      "title": "3. 配置语音",
+      "description": "选择合适的语音角色,自定义您的播客音色。"
+    },
+    "step4": {
+      "title": "4. 生成播客",
+      "description": "点击生成按钮,PodcastHub 将自动为您创建专业的播客音频。"
+    }
+  },
+  "faqItems": {
+    "q1": {
+      "question": "什么是 PodcastHub?",
+      "answer": "PodcastHub 是一个智能播客生成平台,可以将您的文本内容快速转换为专业的播客音频。支持多种语音和AI生成模式。"
+    },
+    "q2": {
+      "question": "如何使用沉浸故事功能?",
+      "answer": "选择AI故事模式时,系统会自动使用沉浸故事功能来创建生动的AI配音脚本。"
+    },
+    "q3": {
+      "question": "支持哪些语言?",
+      "answer": "PodcastHub 支持中文、英文、日文等多种语言。您可以根据内容选择相应的语音角色。"
+    },
+    "q4": {
+      "question": "生成的播客可以保存多久?",
+      "answer": "为了保护您的隐私和节省存储空间,生成的播客音频会保留30分钟。请及时下载保存到本地。"
+    },
+    "q5": {
+      "question": "如何获取更多积分?",
+      "answer": "您可以通过签到或购买积分套餐来获取更多生成次数。新用户注册即可获得免费体验积分。"
+    },
+    "q6": {
+      "question": "什么是AI播客生成器?",
+      "answer": "AI播客生成器是我们的智能播客创作工具,可以帮助您创建更专业、更有吸引力的播客内容。结合沉浸故事功能,在AI故事模式下自动启用,让您的播客更具感染力。"
+    }
+  },
   "dataRetentionWarning": "数据只保留30分钟，请尽快下载保存",
   "saveSuccessTitle": "保存成功",
   "saveErrorTitle": "保存失败",
