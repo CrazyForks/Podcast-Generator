@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: paramsType }): Prom
   const decodedFileName = decodeURIComponent(fileName);
   
   // 获取网站主标题
-  const siteName = 'PodcastHub';
+  const siteName = 'Podcast Hub';
   
   // 获取音频信息以获取 overview_content
   const result = await getAudioInfo(decodedFileName, lang);
