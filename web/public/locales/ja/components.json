@@ -98,6 +98,8 @@
     "pleaseSelectSpeaker": "スピーカーを選択してください",
     "pleaseSelectAtLeastOneSpeaker": "少なくとも1人のポッドキャストスピーカーを選択してください。",
     "podcastGenerationFailed": "ポッドキャストの生成に失敗しました:",
+    "textTruncated": "テキストが切り詰められました",
+    "textTruncatedMessage": "現在のモードに切り替えた後、テキストは制限に準拠するために自動的に {{maxChars}} 文字に切り詰められました。",
     "maximum5Speakers": "最大5人のスピーカーを選択できます。",
     "chinese": "中国語",
     "english": "英語",

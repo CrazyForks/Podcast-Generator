@@ -68,6 +68,26 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
    const [topic, setTopic] = useState('');
    const [customInstructions, setCustomInstructions] = useState('');
    const [selectedMode, setSelectedMode] = useState<'ai-podcast' | 'ai-story'>('ai-podcast');
+   
+   // 字符数限制常量
+   const MAX_CHARS_AI_PODCAST = 20000;
+   const MAX_CHARS_AI_STORY = 30000;
+   
+   // 获取当前模式的字符数限制
+   const maxChars = selectedMode === 'ai-podcast' ? MAX_CHARS_AI_PODCAST : MAX_CHARS_AI_STORY;
+
+   // 监听模式切换，如果文本超过新模式的限制，则截断
+   useEffect(() => {
+     if (topic.length > maxChars) {
+       const truncatedTopic = topic.substring(0, maxChars);
+       setTopic(truncatedTopic);
+       setItem('podcast-topic', truncatedTopic);
+       error(
+         t('podcastCreator.textTruncated'),
+         t('podcastCreator.textTruncatedMessage', { maxChars })
+       );
+     }
+   }, [selectedMode, maxChars]); // 只在模式切换时触发
 
    // 初始化时从 localStorage 加载 topic 和 customInstructions
    useEffect(() => {
@@ -366,13 +386,26 @@ const PodcastCreator: React.FC<PodcastCreatorProps> = ({
             <textarea
               value={topic}
               onChange={(e) => {
-                setTopic(e.target.value);
-                setItem('podcast-topic', e.target.value); // 实时保存到 localStorage
+                const newValue = e.target.value;
+                // 如果超过字符数限制，截取到最大长度
+                const finalValue = newValue.length > maxChars ? newValue.substring(0, maxChars) : newValue;
+                setTopic(finalValue);
+                setItem('podcast-topic', finalValue); // 实时保存到 localStorage
               }}
               placeholder={t('podcastCreator.enterTextPlaceholder')}
-              className="w-full h-32 resize-none border-none outline-none text-lg placeholder-neutral-400 bg-white"
+              className="w-full h-48 resize-none border-none outline-none text-lg placeholder-neutral-400 bg-white"
               disabled={isGenerating}
             />
+            
+            {/* 字符数统计 */}
+            <div className="flex justify-end mt-2">
+              <span className={cn(
+                "text-sm",
+                topic.length > maxChars * 0.9 ? "text-red-500 font-medium" : "text-neutral-400"
+              )}>
+                {topic.length} / {maxChars}
+              </span>
+            </div>
             
             {/* 自定义指令 */}
             {customInstructions !== undefined && selectedMode === 'ai-podcast' && (

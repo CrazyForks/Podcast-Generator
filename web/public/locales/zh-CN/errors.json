@@ -26,6 +26,7 @@
   "user_not_logged_in_or_session_expired": "用户未登录或会话已过期",
   "request_body_cannot_be_empty": "请求正文不能为空",
   "tts_provider_cannot_be_empty": "TTS服务提供商不能为空",
+  "input_text_exceeds_limit": "输入文本超过限制，最多允许 {{limit}} 字符",
   "please_select_at_least_one_speaker": "请至少选择一位播客说话人",
   "invalid_speaker_config_format": "播客说话人配置格式无效",
   "insufficient_points_for_podcast": "积分不足，生成一个播客需要 {{pointsNeeded}} 积分，您当前只有 {{currentPoints}} 积分。",

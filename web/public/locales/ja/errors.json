@@ -26,6 +26,7 @@
   "user_not_logged_in_or_session_expired": "ユーザーがログインしていないか、セッションの有効期限が切れています",
   "request_body_cannot_be_empty": "リクエストボディは空にできません",
   "tts_provider_cannot_be_empty": "TTSプロバイダーは空にできません",
+  "input_text_exceeds_limit": "入力テキストが制限を超えています。最大 {{limit}} 文字まで許可されています",
   "please_select_at_least_one_speaker": "少なくとも1人のポッドキャスト話者を選択してください",
   "invalid_speaker_config_format": "無効なポッドキャスト話者設定フォーマット",
   "insufficient_points_for_podcast": "ポイントが不足しています。ポッドキャストを生成するには{{pointsNeeded}}ポイントが必要です。現在{{currentPoints}}ポイントしかありません。",

@@ -33,6 +33,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // 字符数限制校验 - AI播客模式限制20000字符
+    const MAX_CHARS_AI_PODCAST = 20000;
+    if (body.input_txt_content.length > MAX_CHARS_AI_PODCAST) {
+      return NextResponse.json(
+        { success: false, error: t('input_text_exceeds_limit', { limit: MAX_CHARS_AI_PODCAST }) },
+        { status: 400 }
+      );
+    }
     if (!body.tts_provider || body.tts_provider.trim().length === 0) {
       return NextResponse.json(
         { success: false, error: t('tts_provider_cannot_be_empty') },

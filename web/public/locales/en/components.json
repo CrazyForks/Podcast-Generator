@@ -98,6 +98,8 @@
     "pleaseSelectSpeaker": "Please select a speaker",
     "pleaseSelectAtLeastOneSpeaker": "Please select at least one podcast speaker.",
     "podcastGenerationFailed": "Podcast generation failed:",
+    "textTruncated": "Text Truncated",
+    "textTruncatedMessage": "After switching to the current mode, the text has been automatically truncated to {{maxChars}} characters to comply with the limit.",
     "maximum5Speakers": "You can select up to 5 speakers.",
     "chinese": "Chinese",
     "english": "English",

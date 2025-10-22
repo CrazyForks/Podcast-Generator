@@ -26,6 +26,7 @@
   "user_not_logged_in_or_session_expired": "User not logged in or session expired",
   "request_body_cannot_be_empty": "Request body cannot be empty",
   "tts_provider_cannot_be_empty": "TTS provider cannot be empty",
+  "input_text_exceeds_limit": "Input text exceeds limit, maximum {{limit}} characters allowed",
   "please_select_at_least_one_speaker": "Please select at least one podcast speaker",
   "invalid_speaker_config_format": "Invalid podcast speaker configuration format",
   "insufficient_points_for_podcast": "Insufficient points, generating a podcast requires {{pointsNeeded}} points, you currently have {{currentPoints}} points.",

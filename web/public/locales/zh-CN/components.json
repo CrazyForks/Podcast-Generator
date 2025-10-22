@@ -98,6 +98,8 @@
     "pleaseSelectSpeaker": "请选择说话人",
     "pleaseSelectAtLeastOneSpeaker": "请至少选择一位播客说话人。",
     "podcastGenerationFailed": "播客生成失败:",
+    "textTruncated": "文本已截断",
+    "textTruncatedMessage": "切换到当前模式后，文本已自动截断至 {{maxChars}} 字符以符合限制。",
     "maximum5Speakers": "最多只能选择5个说话人。",
     "chinese": "中文",
     "english": "英文",
