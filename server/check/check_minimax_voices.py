@@ -6,7 +6,7 @@ import json
 
 def check_minimax_voices():
     config_file_path = "../config/minimax.json"
-    tts_providers_path = "../config/tts_providers.json"
+    tts_providers_path = "../config/tts_providers-local.json"
     test_text = "你好"  # 测试文本
     
     try:
